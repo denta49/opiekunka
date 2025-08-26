@@ -40,8 +40,19 @@ def earn(customer_id: str, points: int) -> int:
         raise ValueError(f"Customer {customer_id} does not exist. Use create cmd first")
     if points < 0:
         raise ValueError("Points must be a positive int.")
-    new_balance = balances.get(customer_id, 0) + points
-    balances[customer_id] = new_balance
+    balances[customer_id] += points
+    return balances[customer_id]
+
+
+def redeem(customer_id: str, points: int) -> int:
+    if customer_id not in balances:
+        raise ValueError(f"Customer {customer_id} does not exist. Use 'create' first.")
+    if points <= 0:
+        raise ValueError("Points to redeem must be a positive integer.")
+    current = balances[customer_id]
+    if points > current:
+        raise ValueError(f"Cannot redeem {points} points. Current balance is {current}.")
+    balances[customer_id] = current - points
     return balances[customer_id]
 
 
@@ -59,10 +70,20 @@ def main() -> int:
         except ValueError as e:
             print(f"Error: {e}")
             return 1
+    if args.command == "redeem":
+        try:
+            new_balance = redeem(args.customer_id, args.points)
+            print(f"Customer {args.customer_id} balance is now {new_balance} points.")
+            return 0
+        except ValueError as e:
+            print(f"Error: {e}")
+            return 1
     if args.command == "earn":
         try:
             new_balance = earn(args.customer_id, args.points)
             print(f"Customer {args.customer_id} balance is now {new_balance} points.")
+            if new_balance < 10:
+                print(f"Warning: Customer {args.customer_id} has a low balance: {new_balance} points.")
             return 0
         except ValueError as e:
             print(f"Error: {e}")

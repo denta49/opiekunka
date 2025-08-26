@@ -1,10 +1,12 @@
 import argparse
 import sys
+import shlex
 
 balances: dict[str, int] = {}
 
 
 def repl() -> int:
+    parser = build_parser()
     print("Entering interactive mode. Type 'help' or 'quit'.")
     while True:
         try:
@@ -22,7 +24,12 @@ def repl() -> int:
             print("Commands: create <id> <points>, earn <id> <points>, redeem <id> <points>, quit")
             continue
 
-        print(f"(echo) {line}")
+        try:
+            tokens = shlex.split(line)
+            args = parser.parse_args(tokens)
+            execute(args)
+        except SystemExit:
+            continue
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -77,6 +84,40 @@ def redeem(customer_id: str, points: int) -> int:
     return balances[customer_id]
 
 
+def execute(args) -> int:
+    if args.command == "create":
+        try:
+            create_customer(args.customer_id, args.points)
+            print(f"Customer {args.customer_id} created with balance {args.points} points.")
+            return 0
+        except ValueError as e:
+            print(f"Error: {e}")
+            return 1
+
+    if args.command == "earn":
+        try:
+            new_balance = earn(args.customer_id, args.points)
+            print(f"Customer {args.customer_id} balance is now {new_balance} points.")
+            return 0
+        except ValueError as e:
+            print(f"Error: {e}")
+            return 1
+
+    if args.command == "redeem":
+        try:
+            new_balance = redeem(args.customer_id, args.points)
+            print(f"Customer {args.customer_id} balance is now {new_balance} points.")
+            if new_balance < 10:
+                print(f"Warning: Customer {args.customer_id} has a low balance: {new_balance} points.")
+            return 0
+        except ValueError as e:
+            print(f"Error: {e}")
+            return 1
+
+    print("Unknown command.")
+    return 2
+
+
 def main() -> int:
 
     if len(sys.argv) == 1:
@@ -87,33 +128,7 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "create":
-        try:
-            create_customer(args.customer_id, args.points)
-            print(f"Customer {args.customer_id} created with balance {args.points} points.")
-            return 0
-        except ValueError as e:
-            print(f"Error: {e}")
-            return 1
-    if args.command == "redeem":
-        try:
-            new_balance = redeem(args.customer_id, args.points)
-            print(f"Customer {args.customer_id} balance is now {new_balance} points.")
-            return 0
-        except ValueError as e:
-            print(f"Error: {e}")
-            return 1
-    if args.command == "earn":
-        try:
-            new_balance = earn(args.customer_id, args.points)
-            print(f"Customer {args.customer_id} balance is now {new_balance} points.")
-            if new_balance < 10:
-                print(f"Warning: Customer {args.customer_id} has a low balance: {new_balance} points.")
-            return 0
-        except ValueError as e:
-            print(f"Error: {e}")
-            return 1
-    return 0
+    return execute(args)
 
 
 if __name__ == "__main__":

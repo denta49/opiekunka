@@ -47,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_redeem.add_argument("customer_id", type=str)
     p_redeem.add_argument("points", type=int)
 
+    # task does not specify what should happen when user does not exist, so I've created such function instead of raising error.
     p_create = sub.add_parser("create", help="Create a new customer with an initial balance")
     p_create.add_argument("customer_id", type=str)
     p_create.add_argument("points", type=int)

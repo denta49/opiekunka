@@ -4,6 +4,27 @@ import sys
 balances: dict[str, int] = {}
 
 
+def repl() -> int:
+    print("Entering interactive mode. Type 'help' or 'quit'.")
+    while True:
+        try:
+            line = input("loyalty> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return 0
+
+        if not line:
+            continue
+        if line.lower() in {"quit", "exit"}:
+            print("Bye!")
+            return 0
+        if line.lower() in {"help", "?"}:
+            print("Commands: create <id> <points>, earn <id> <points>, redeem <id> <points>, quit")
+            continue
+
+        print(f"(echo) {line}")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="loyalty",
@@ -57,6 +78,10 @@ def redeem(customer_id: str, points: int) -> int:
 
 
 def main() -> int:
+
+    if len(sys.argv) == 1:
+        return repl()
+
     print('CLI is live, You can start!')
 
     parser = build_parser()
